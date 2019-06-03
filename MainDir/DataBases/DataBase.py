@@ -1,19 +1,23 @@
 import sqlite3
 class DataBase:
-	GuildDB = 0
+	DaBe = 0
 	cursor = 0 
 	def __init__(self, dbname):
-		self.GuildDB = sqlite3.connect(dbname)
-		self.cursor = self.GuildDB.cursor()
+		self.DaBe = sqlite3.connect(dbname)
+		self.cursor = self.DaBe.cursor()
+	def __del__(self):
+		self.DaBe.commit()
+		self.DaBe.close()
 	def CREATE_TABLE(self, TableName, data):
 		string = "CREATE TABLE " + TableName + "("
 		for i in range(len(data)):
-			string+= '"' + data[i][0] +  '" ' + data[i][1]  + ", "
+			string+= "'" + data[i][0] +  "' " + data[i][1]
 			if len(data)-1 == i:
 				string += ")"
 			else:
-				string += ","
+				string += ", "
 		self.cursor.execute(string)
+		self.DaBe.commit()
 	def DROP_TABLE(self, TableName):
 		self.cursor.execute("DROP " + TableName)
 	def TRUNCATE_TABLE(self,TableName):
@@ -25,25 +29,28 @@ class DataBase:
 	def INSERT(self, TableName, data):
 		string = "INSERT INTO " + TableName + "("
 		for i in range(len(data)):
-			string += '"' + data[i][0] + '"'
+			string += "'" + data[i][0] + "'"
 			if(i!=len(data)-1):
 				string+=', '
 		string += ") VALUES("
 		for i in range(len(data)):
-			string += '"' + data[i][1].replace('"', "\\\"") + '"'
+			string += "'" + data[i][1]+ "'"
 			if(i!=len(data)-1):
 				string+=', '
 		string+=")"
 		print(string)
 		self.cursor.execute(string)
+		self.DaBe.commit()
 	def UPDATE(self, TableName, set, whereStatement):
 		string =  "UPDATE " + TableName + " SET "
 		for i in range(len(set)):
-			string += set[i][0] + ' = "' + set[i][1] + '"'
+			string += set[i][0] + " = '" + set[i][1] + "'"
 			if i != len(set)-1:
 				string+=", "
 		string += " WHERE " + whereStatement
+		print(string)
 		self.cursor.execute(string)
+		self.DaBe.commit()
 	def DELETE(self, TableName, whereStatement):
 		string = "DELETE FROM " + TableName + " WHERE " + whereStatement
 		self.cursor.execute(string)
@@ -55,13 +62,14 @@ class DataBase:
 				string += ","
 		string += " FROM " + TableName
 		string += " WHERE " + whereStatement
+		self.cursor.execute(string)
 		return self.cursor.fetchall()
 
 class DB(DataBase):
 	def __init__(self, plugins):
-		super(DB,self).__init__("Guilds.db")
+		super(DB,self).__init__("DataBases/DataBase.db")
 		create_table_value1 = [["id", "int"]]
-		create_table_value2 = [["id", "int"], ["prefix","stringing"], ["plugin_channels", "string"]]
+		create_table_value2 = [["id", "int"], ["prefix","string"], ["plugin_channels", "string"]]
 		for plugin in plugins:
 			x1 = plugin.getAdditionalUserValues()
 			x2 = plugin.getAdditionalGuildValues()
@@ -80,7 +88,7 @@ class DB(DataBase):
 	def EditUser(self, id, editValues):
 		self.UPDATE("Users", editValues, "id = " + str(id))
 	def GetUserData(self, id):
-		return self.SELECT("Users", [], "id = " + str(id))
+		return self.SELECT("Users", ["*"], "id = " + str(id))
 	def AddGuild(self, id, prefix, plugin_channels):
 		self.INSERT("Guilds", [["id", str(id)], ["prefix", str(prefix)], ["plugin_channels", str(plugin_channels)]])
 
@@ -88,7 +96,7 @@ class DB(DataBase):
 		self.UPDATE("Guilds", [["prefix", str(prefix)], ["plugin_channels", plugin_channels]], "id = " + str(id))
 
 	def GetGuildData(self, id):
-		return self.SELECT("Guilds", [], "id = " + str(id))
+		return self.SELECT("Guilds", ["*"], "id = " + str(id))
 	def GetPrefix(self, id):
 		pref = self.SELECT("Guilds", ["prefix"], "id = " + str(id))
 		return pref[0]
