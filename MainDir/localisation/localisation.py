@@ -70,5 +70,4 @@ class Localisation:
                         break;
                 if x:
                     listOfLanguages.append(lang[0])
-        print(listOfLanguages)
         return listOfLanguages

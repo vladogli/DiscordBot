@@ -37,7 +37,6 @@ async def addGuild(id):
 
 async def admin_message(command, message, client, guildData):
     lang =  Utils.getChannelLanguage(db, message.channel.id)
-    print(lang)
     def lGetText(value):
             return Localisation.getText("AdminCommands", value, lang)
     if(command[0] == "help"):
@@ -50,6 +49,7 @@ async def admin_message(command, message, client, guildData):
         embed.add_field(name=lGetText("disconnectPackageCmd"), value=lGetText("disconnectPackage"), inline=False)
         embed.add_field(name="listOfLanguages", value=lGetText("listOfLanguages"), inline=False)
         embed.add_field(name=lGetText("changeLanguageCmd"), value=lGetText("changeLanguage"), inline=False)
+        embed.add_field(name=lGetText("changePrefixCmd"), value=lGetText("changePrefix"), inline=False)
         await message.channel.send(embed=embed)
     elif command[0] == "listofpackages":
         embed = discord.Embed(
@@ -98,18 +98,33 @@ async def admin_message(command, message, client, guildData):
                 await message.channel.send(lGetText("changeLanguageSuccess"))
                 return
         await message.channel.send(lGetText("changeLanguageWL"))
+    elif command[0] == "changeprefix":
+        try:
+            if command[1][0] == guildData[0][1]:
+                await message.channel.send(lGetText("changePrefixFailWN"))
+                return
+            if len(command[1][0])!=1:
+                await message.channel.send(lGetText("changePrefixFail"))
+                return
+            db.UPDATE("Guilds", [["prefix",command[1][0]]], "id = " + str(message.guild.id))
+            await message.channel.send(lGetText("changePrefixSuccess").format(command[1][0]))
+        except:
+            await message.channel.send(lGetText("changePrefixFail"))
+async def getPlugins(guild_id):
+    data = db.GetGuildData(guild_id)
+    if len(data) == 0:
+        await addGuild(guild_id)
+        return
+    return json.loads(data[0][2])
 @client.event
 async def on_message(message):
     if(message.author == client.user):
         return
     data = db.GetGuildData(message.guild.id)
-    if len(data) == 0:
-        await addGuild(message.guild.id)
-        return
     if message.content[0]!=data[0][1]:
         return
+    Plugins = await getPlugins(message.guild.id)
     command = Utils.getCommand(message.content)
-    Plugins = json.loads(data[0][2])
     for Plugin in Plugins:
         for channel in Plugins[Plugin]:
             if channel == message.channel.id:
@@ -121,8 +136,233 @@ async def on_message(message):
                                 return
     if message.author.permissions_in(message.channel).value & 8 == 8:
         await admin_message(command, message, client, data)
+@client.event
+async def on_ready():
+    print("Ready to work!")
+@client.event
+async def on_raw_message_delete(payload):
+     Plugins = await getPlugins(payload.guild_id)
+     for Plugin in Plugins:
+        for channel in Plugins[Plugin]:
+            if channel == payload.channel_id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_raw_message_delete(payload)
+@client.event
+async def on_message_edit(before,after):
+     Plugins = await getPlugins(before.guild.id)
+     for Plugin in Plugins:
+        for channel in Plugins[Plugin]:
+            if channel == before.channel.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_message_edit(before,after)
+@client.event
+async def on_reaction_add(reaction, user):
+     Plugins = await getPlugins(reaction.guild.id)
+     for Plugin in Plugins:
+        for channel in Plugins[Plugin]:
+            if channel == reaction.message.channel.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_reaction_add(reaction, user)
+@client.event
+async def on_raw_reaction_add(payload):
+     Plugins = await getPlugins(payload.guild_id)
+     for Plugin in Plugins:
+        for channel in Plugins[Plugin]:
+            if channel == payload.channel_id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_raw_reaction_add(payload)
+@client.event
+async def on_reaction_remove(reaction, user):
+     Plugins = await getPlugins(reaction.guild.id)
+     for Plugin in Plugins:
+        for channel in Plugins[Plugin]:
+            if channel == reaction.message.channel.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_reaction_remove(reaction, user)
+@client.event
+async def on_raw_reaction_remove(payload):
+     Plugins = await getPlugins(payload.guild_id)
+     for Plugin in Plugins:
+        for channel in Plugins[Plugin]:
+            if channel == payload.channel_id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_raw_reaction_remove(payload)
+@client.event
+async def on_reaction_clear(message, reactions):
+     Plugins = await getPlugins(message.guild.id)
+     for Plugin in Plugins:
+        for channel in Plugins[Plugin]:
+            if channel == message.channel.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_reaction_clear(message, reactions)
+@client.event
+async def on_raw_reaction_clear(payload):
+     Plugins = await getPlugins(payload.guild_id)
+     for Plugin in Plugins:
+        for channel in Plugins[Plugin]:
+            if channel == payload.channel_id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_raw_reaction_clear(payload)
+@client.event
+async def on_private_channel_delete(channel):
+    Plugins = await getPlugins(channel.guild.id)
+    for Plugin in Plugins:
+        for Channel in Plugins[Plugin]:
+            if Channel == channel.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_private_channel_delete(channel)
+@client.event
+async def on_private_channel_create(channel):
+    Plugins = await getPlugins(channel.guild.id)
+    for Plugin in Plugins:
+        for Channel in Plugins[Plugin]:
+            if Channel == channel.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_private_channel_create(channel)
+@client.event
+async def on_private_channels_update(before, after):
+    Plugins = await getPlugins(before.guild.id)
+    for Plugin in Plugins:
+        for Channel in Plugins[Plugin]:
+            if Channel == before.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_private_channels_update(before, after)
+@client.event
+async def on_private_channel_pins_update(channel, last_pin):
+    Plugins = await getPlugins(channel.guild.id)
+    for Plugin in Plugins:
+        for Channel in Plugins[Plugin]:
+            if Channel == channel.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_private_channel_pins_update(channel, last_pin)
+@client.event
+async def on_guild_channel_delete(channel):
+    Plugins = await getPlugins(channel.guild.id)
+    for Plugin in Plugins:
+        for Channel in Plugins[Plugin]:
+            if Channel == channel.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_channel_delete(channel)
+@client.event
+async def on_guild_channel_create(channel):
+    Plugins = await getPlugins(channel.guild.id)
+    for Plugin in Plugins:
+        for Channel in Plugins[Plugin]:
+            if Channel == channel.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_channel_create(channel)
+@client.event
+async def on_guild_channel_update(before, after):
+    Plugins = await getPlugins(before.guild.id)
+    for Plugin in Plugins:
+        for Channel in Plugins[Plugin]:
+            if Channel == before.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_channels_update(before, after)
+@client.event
+async def on_guild_channel_pins_update(channel, last_pin):
+    Plugins = await getPlugins(channel.guild.id)
+    for Plugin in Plugins:
+        for Channel in Plugins[Plugin]:
+            if Channel == channel.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_channel_pins_update(channel, last_pin)
 
+@client.event
+async def on_guild_integrations_update(guild):
+    for plugin in plugins:
+        await plugin.on_guild_integrations_update(guild)
 
+@client.event
+async def on_webhoooks_update(channel):
+    Plugins = await getPlugins(channel.guild.id)
+    for Plugin in Plugins:
+        for Channel in Plugins[Plugin]:
+            if Channel == channel.id:
+                for plugin in plugins:
+                    if plugin.name == Plugin:
+                        await plugin.on_channel_pins_update(channel)
+
+@client.event
+async def on_member_join(member):
+    for plugin in plugins:
+        await plugin.on_member_join(member)
+
+@client.event
+async def on_member_remove(member):
+    for plugin in plugins:
+        await plugin.on_member_remove(member)
+
+@client.event
+async def on_member_update(before, after):
+    for plugin in plugins:
+        await plugin.on_member_update(before, after)
+
+@client.event
+async def on_guild_join(guild):
+    for plugin in plugins:
+        await plugin.on_guild_join(guild)
+
+@client.event
+async def on_guild_remove(guild):
+    for plugin in plugins:
+        await plugin.on_guild_remove(guild)
+
+@client.event
+async def on_guild_update(guild):
+    for plugin in plugins:
+        await plugin.on_guild_update(guild)
+
+@client.event
+async def on_guild_role_create(role):
+    for plugin in plugins:
+        await plugin.on_guild_role_create(role)
+
+@client.event
+async def on_guild_role_delete(role):
+    for plugin in plugins:
+        await plugin.on_guild_role_delete(role)
+
+@client.event
+async def on_guild_role_update(before, after):
+    for plugin in plugins:
+        await plugin.on_guild_role_update(before, after)
+
+@client.event
+async def on_guild_emojis_update(guild, before, after):
+    for plugin in plugins:
+        await plugin.on_guild_emojis_update(guild, before, after)
+
+@client.event
+async def on_voice_state_update(member, before, after):
+    for plugin in plugins:
+        await plugin.on_voice_state_update(member, before, after)
+
+@client.event
+async def on_member_ban(guild, user):
+    for plugin in plugins:
+        await plugin.on_member_ban(guild, user)
+
+@client.event
+async def on_member_unban(guild, user):
+    for plugin in plugins:
+        await plugin.on_member_ban(guild, user)
 
 
 f = open('token')

@@ -1,0 +1,8 @@
+{
+    "description": "This package is necessary in order to duplicate the channels when they are busy.",
+    "helpTitle": "Help",
+    "help": "Shows this message.",
+    "addChannel": "Add channel to the parser.",
+    "viewChannels": "View list of channels which updating.",
+    "removeChannel": "Remove channel from the parser."
+}

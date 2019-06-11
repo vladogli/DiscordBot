@@ -17,5 +17,10 @@
     "disconnectPackageFail": "Package isn't connected to this channel!",
     "listOfAvailableLanguagesTitle": "List of available languages:",
     "changeLanguageWL": "Wrong name of language package!",
-    "changeLanguageSuccess": "Language was successfully installed in this channel"
+    "changeLanguageSuccess": "Language was successfully installed in this channel",
+    "changePrefixSuccess": "Prefix was successfully changed to {}",
+    "changePrefixFailWN": "This prefix is already installed!",
+    "changePrefixFail": "Wrong prefix!",
+    "changePrefixCmd": "!changePrefix %prefix%",
+    "changePrefix": "Changes prefix to %prefix%"
 }

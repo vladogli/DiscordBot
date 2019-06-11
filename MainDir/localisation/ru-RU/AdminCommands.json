@@ -17,5 +17,10 @@
     "disconnectPackageFail": "Пакет не подключен к этому каналу!",
     "listOfAvailableLanguagesTitle": "Список доступных языков:",
     "changeLanguageWL": "Неверное имя языкового пакета!",
-    "changeLanguageSuccess": "Язык был успешно установлен в этом канале!"
+    "changeLanguageSuccess": "Язык был успешно установлен в этом канале!",
+    "changePrefixSuccess": "Префикс был успешно изменён на {}!",
+    "changePrefixFailWN": "Этот префикс уже установлен!",
+    "changePrefixFail": "Был указан неверный префикс!",
+    "changePrefixCmd": "!changePrefix %префикс%",
+    "changePrefix": "Изменяет префикс на %префикс%"
 }

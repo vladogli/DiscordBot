@@ -38,7 +38,6 @@ class DataBase:
 			if(i!=len(data)-1):
 				string+=', '
 		string+=")"
-		print(string)
 		self.cursor.execute(string)
 		self.DaBe.commit()
 	def UPDATE(self, TableName, set, whereStatement):
@@ -48,7 +47,6 @@ class DataBase:
 			if i != len(set)-1:
 				string+=", "
 		string += " WHERE " + whereStatement
-		print(string)
 		self.cursor.execute(string)
 		self.DaBe.commit()
 	def DELETE(self, TableName, whereStatement):
@@ -81,6 +79,7 @@ class DB(DataBase):
 		try:
 			self.CREATE_TABLE("Users", create_table_value1)
 			self.CREATE_TABLE("Guilds", create_table_value2)
+			self.CREATE_TABLE("ChannelsAndLanguages", [["channelID", "string"], ["language", "string"]])
 		except:
 			pass
 	def AddUser(self, id):
